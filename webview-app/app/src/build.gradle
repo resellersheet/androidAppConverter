@@ -1,0 +1,61 @@
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.yourdomain.webviewapp"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+
+        buildConfigField "String", "SITE_URL", "\"${project.hasProperty('site_url') ? site_url : 'https://example.com'}\""
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
+
+
+jar/webview-app
+
+
+echo " androidAppConverter" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/resellersheet/androidAppConverter.git
+git push -u origin main
+
+
+
+
+
+
+
+echo "# androidAppConverter" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/resellersheet/androidAppConverter.git
+
+
+
+echo "# androidAppConverter" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote set-url origin https://github.com/resellersheet/androidAppConverter.git
+git push -u origin main
