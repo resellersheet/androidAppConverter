@@ -1,1 +1,28 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 33
+
+    defaultConfig {
+        applicationId "com.yourdomain.webviewapp"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+        buildConfigField "String", "SITE_URL", "\"${project.hasProperty('site_url') ? project.site_url : 'https://example.com'}\""
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+}
 
