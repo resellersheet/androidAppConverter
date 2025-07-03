@@ -1,15 +1,18 @@
-<application
-    android:label="WebViewApp"
-    android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.yourdomain.webviewapp">
 
-    <activity android:name=".SplashActivity"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"/>
-            <category android:name="android.intent.category.LAUNCHER"/>
-        </intent-filter>
-    </activity>
+    <uses-permission android:name="android.permission.INTERNET" />
 
-    <activity android:name=".MainActivity"
-        android:exported="true" />
-</application>
+    <application
+        android:label="WebViewApp"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
