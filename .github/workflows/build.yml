@@ -3,6 +3,9 @@ name: Build WebView APK
 on:
   workflow_dispatch:
     inputs:
+      logo_url:
+        description: 'Logo URL (PNG)'
+        required: true
       site_url:
         description: 'Website URL for WebView'
         required: true
@@ -33,6 +36,14 @@ jobs:
         run: |
           cd webview-app
           gradle tasks
+
+      - name: Download and replace logo icon
+        run: |
+          cd webview-app
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p app/src/main/res/mipmap-$density
+            curl -L "${{ github.event.inputs.logo_url }}" -o app/src/main/res/mipmap-$density/ic_launcher.png || echo "Logo download failed for $density"
+          done
 
       - name: Build APK with site_url and app_name
         run: |
