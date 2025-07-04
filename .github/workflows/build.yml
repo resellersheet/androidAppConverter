@@ -6,6 +6,9 @@ on:
       site_url:
         description: 'Website URL for WebView'
         required: true
+      app_name:
+        description: 'App Name for the APK'
+        required: true
 
 jobs:
   build:
@@ -31,10 +34,12 @@ jobs:
           cd webview-app
           gradle tasks
 
-      - name: Build APK with site_url
+      - name: Build APK with site_url and app_name
         run: |
           cd webview-app
-          gradle :app:assembleDebug -Psite_url="${{ github.event.inputs.site_url }}"
+          gradle :app:assembleDebug \
+            -Psite_url="${{ github.event.inputs.site_url }}" \
+            -Papp_name="${{ github.event.inputs.app_name }}"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
