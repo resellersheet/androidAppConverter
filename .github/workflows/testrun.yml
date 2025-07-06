@@ -1,9 +1,11 @@
-name: Test Action
+name: ✅ Test Actions Runner
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "✅ GitHub Actions is working"
+      - name: Print message
+        run: echo "✅ GitHub Actions runner is working!"
