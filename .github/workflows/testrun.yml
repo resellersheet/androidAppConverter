@@ -1,11 +1,9 @@
-name:  Actions Runner
+name: Ping Test
 
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
-  test:
+  ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Print message
-        run: echo " GitHub Actions runner is working!"
+      - run: echo "Ping successful"
