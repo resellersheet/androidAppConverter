@@ -1,4 +1,4 @@
-name: ✅ Test Actions Runner
+name:  Actions Runner
 
 on:
   workflow_dispatch:
@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print message
-        run: echo "✅ GitHub Actions runner is working!"
+        run: echo " GitHub Actions runner is working!"
