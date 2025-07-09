@@ -52,7 +52,7 @@ jobs:
           gradle assembleRelease
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ UPDATED HERE
         with:
           name: ${{ inputs.account_id }}-webview-app
           path: webview-app/app/build/outputs/apk/release/app-release.apk
