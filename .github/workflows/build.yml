@@ -49,7 +49,7 @@ jobs:
       - name: Build APK
         run: |
           cd webview-app
-          ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
+          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
