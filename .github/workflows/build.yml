@@ -47,10 +47,10 @@ jobs:
         run: |
           echo 'buildConfigField "String", "SITE_URL", "\"${{ inputs.site_url }}\""' >> webview-app/app/build.gradle
 
-      - name: Build APK
-        run: |
-          cd webview-app
-          gradle assembleRelease
+      -  name: Build APK
+       run: |
+    cd webview-app
+    ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4  # ✅ Updated to v4
