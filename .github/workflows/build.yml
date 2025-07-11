@@ -28,12 +28,15 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 11
-          distribution: temurin  # ✅ Required field now
+          distribution: temurin
 
       - name: Set up Gradle 7.6
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 7.6
+
+      - name: Ensure logo folder exists
+        run: mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
 
       - name: Download logo
         run: |
@@ -43,17 +46,13 @@ jobs:
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Inject site URL
+      - name: Build APK
         run: |
-          echo 'buildConfigField "String", "SITE_URL", "\"${{ inputs.site_url }}\""' >> webview-app/app/build.gradle
-
-      -  name: Build APK
-       run: |
-    cd webview-app
-    ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
+          cd webview-app
+          ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.account_id }}-webview-app
           path: webview-app/app/build/outputs/apk/release/app-release.apk
