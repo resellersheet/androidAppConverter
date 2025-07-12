@@ -17,9 +17,10 @@
             android:visibility="gone" />
 
         <WebView
-            android:id="@+id/webView"  <!-- Capital W to match Java -->
+            android:id="@+id/webView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+            <!-- Note the closing "/>" here -->
 
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
