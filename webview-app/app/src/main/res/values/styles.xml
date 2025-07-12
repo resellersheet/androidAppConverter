@@ -1,7 +1,9 @@
-
 <resources>
-    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar" />
-    <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Define your own theme instead of overriding the system one -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar" />
+
+    <style name="SplashTheme" parent="AppTheme.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
 </resources>
+
