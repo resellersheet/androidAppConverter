@@ -48,7 +48,8 @@ jobs:
 
       - name: Build APK
         run: |
-          ./gradlew :webview-app:assembleRelease -Psite_url="${{ inputs.site_url }}"
+          cd webview-app
+          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: Rename APK to app name
         run: |
@@ -61,4 +62,4 @@ jobs:
             -F "apk_file=@webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk" \
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
-            https://your-php-domain.com/upload.php
+            https://activespreadsheet.com/upload.php
