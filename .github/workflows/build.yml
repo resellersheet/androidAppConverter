@@ -51,8 +51,10 @@ jobs:
           cd webview-app
           gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.account_id }}-webview-app
-          path: webview-app/app/build/outputs/apk/release/app-release.apk
+      - name: Upload APK to PHP server
+        run: |
+          curl -X POST \
+            -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
+            -F "account_id=${{ inputs.account_id }}" \
+            -F "app_name=${{ inputs.app_name }}" \
+            https://activespreadsheet.com/upload.php
