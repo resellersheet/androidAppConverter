@@ -48,13 +48,17 @@ jobs:
 
       - name: Build APK
         run: |
-          cd webview-app
-          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
+          ./gradlew :webview-app:assembleRelease -Psite_url="${{ inputs.site_url }}"
+
+      - name: Rename APK to app name
+        run: |
+          mv webview-app/app/build/outputs/apk/release/app-release.apk \
+             webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk
 
       - name: Upload APK to PHP server
         run: |
           curl -X POST \
-            -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
+            -F "apk_file=@webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk" \
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
-            https://activespreadsheet.com/upload.php
+            https://your-php-domain.com/upload.php
