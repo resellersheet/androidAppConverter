@@ -58,7 +58,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd webview-app
-          ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
+          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: List APK files after build
         run: |
@@ -76,3 +76,4 @@ jobs:
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
             https://activespreadsheet.com/upload.php
+
