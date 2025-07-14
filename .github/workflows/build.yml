@@ -1,4 +1,4 @@
-name: Build WebView APK (Debug Build)
+name: Build WebView APK (Release Build)
 
 on:
   workflow_dispatch:
@@ -46,24 +46,24 @@ jobs:
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Build Debug APK
+      - name: Build Release APK
         run: |
           cd webview-app
-          gradle assembleDebug -Psite_url="${{ inputs.site_url }}"
+          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: List APK files after build
         run: |
-          find webview-app/app/build/outputs/apk -name "*.apk"
+          find webview-app/app/build/outputs/apk/release -name "*.apk"
 
-      - name: Rename Debug APK to app name
+      - name: Rename Release APK to app name
         run: |
-          mv webview-app/app/build/outputs/apk/debug/app-debug.apk \
-             webview-app/app/build/outputs/apk/debug/${{ inputs.app_name }}.apk
+          mv webview-app/app/build/outputs/apk/release/app-release.apk \
+             webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk
 
-      - name: Upload Debug APK to PHP server
+      - name: Upload Release APK to PHP server
         run: |
           curl -X POST \
-            -F "apk_file=@webview-app/app/build/outputs/apk/debug/${{ inputs.app_name }}.apk" \
+            -F "apk_file=@webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk" \
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
             https://activespreadsheet.com/upload.php
