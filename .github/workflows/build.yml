@@ -6,6 +6,9 @@ on:
       site_url:
         required: true
         type: string
+      package_name:
+        required: true
+        type: string
       app_name:
         required: true
         type: string
@@ -21,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Java
@@ -46,34 +49,27 @@ jobs:
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Decode Keystore
+      - name: Replace applicationId in build.gradle
         run: |
-          mkdir -p webview-app/app/keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
+          sed -i "s|applicationId \".*\"|applicationId \"${{ inputs.package_name }}\"|" webview-app/app/build.gradle
+
+      - name: Replace site URL in strings.xml
+        run: |
+          sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Build Release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd webview-app
-          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
+          gradle assembleRelease
 
       - name: List APK files after build
         run: |
           find webview-app/app/build/outputs/apk/release -name "*.apk"
 
-      - name: Rename Release APK to app name
-        run: |
-          mv webview-app/app/build/outputs/apk/release/app-release.apk \
-             webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk
-
       - name: Upload Release APK to PHP server
         run: |
           curl -X POST \
-            -F "apk_file=@webview-app/app/build/outputs/apk/release/${{ inputs.app_name }}.apk" \
+            -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
             https://activespreadsheet.com/upload.php
-
