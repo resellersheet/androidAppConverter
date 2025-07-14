@@ -6,7 +6,7 @@ android {
     compileSdkVersion 33
 
     defaultConfig {
-        applicationId "com.example.webviewapp"  // Change to your actual app package name
+        applicationId "com.default.package"  // will be replaced dynamically by sed
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -30,7 +30,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Can configure debug signing if needed
+            // debug config here
         }
     }
 }
@@ -39,5 +39,5 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.9.0'
-    // Add any other dependencies your app needs
+    // other dependencies as needed
 }
