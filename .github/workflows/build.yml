@@ -46,10 +46,19 @@ jobs:
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
+      - name: Decode Keystore
+        run: |
+          mkdir -p webview-app/app/keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
+
       - name: Build Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd webview-app
-          gradle assembleRelease -Psite_url="${{ inputs.site_url }}"
+          ./gradlew assembleRelease -Psite_url="${{ inputs.site_url }}"
 
       - name: List APK files after build
         run: |
