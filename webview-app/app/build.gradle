@@ -1,35 +1,21 @@
-plugins {
-    id 'com.android.application'
-}
-
 android {
-    compileSdkVersion 33
-
-    defaultConfig {
-    applicationId "com.yourdomain.webviewapp"
-    minSdkVersion 21
-    targetSdkVersion 33
-    versionCode 1
-    versionName "1.0"
-
-    def siteUrl = project.hasProperty("site_url") ? project.getProperty("site_url") : "https://example.com"
-    buildConfigField "String", "SITE_URL", "\"${siteUrl}\""
-}
-
-    buildTypes {
-        debug {
-            minifyEnabled false
+    signingConfigs {
+        release {
+            storeFile file("keystore/release-key.jks")
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
         }
     }
-    namespace 'com.yourdomain.webviewapp'
-}
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    implementation 'com.github.bumptech.glide:glide:4.15.1'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            // Add proguard rules if needed
+        }
+        debug {
+            // Optional: you can keep debug unsigned or signed as needed
+        }
+    }
 }
