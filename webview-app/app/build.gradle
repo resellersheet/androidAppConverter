@@ -1,4 +1,18 @@
+plugins {
+    id 'com.android.application'
+}
+
 android {
+    compileSdkVersion 33
+
+    defaultConfig {
+        applicationId "com.example.webviewapp"  // Change to your actual app package name
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+    }
+
     signingConfigs {
         release {
             storeFile file("keystore/release-key.jks")
@@ -7,15 +21,23 @@ android {
             keyPassword System.getenv("KEY_PASSWORD")
         }
     }
+
     buildTypes {
         release {
             signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
-            // Add proguard rules if needed
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Optional: you can keep debug unsigned or signed as needed
+            // Can configure debug signing if needed
         }
     }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.9.0'
+    // Add any other dependencies your app needs
 }
