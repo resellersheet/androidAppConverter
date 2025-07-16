@@ -49,9 +49,10 @@ jobs:
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Replace applicationId in build.gradle
+      - name: Replace applicationId and namespace in build.gradle
         run: |
           sed -i "s|applicationId \".*\"|applicationId \"${{ inputs.package_name }}\"|" webview-app/app/build.gradle
+          sed -i "s|namespace \".*\"|namespace \"${{ inputs.package_name }}\"|" webview-app/app/build.gradle
 
       - name: Replace site URL in strings.xml
         run: |
