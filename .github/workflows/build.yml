@@ -45,7 +45,7 @@ jobs:
         run: |
           curl -L "${{ inputs.logo_url }}" -o webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-      - name: Set app name
+      - name: Set app name in strings.xml
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
@@ -60,9 +60,9 @@ jobs:
       - name: Build Release APK
         run: |
           cd webview-app
-          gradle assembleRelease
+          ./gradlew assembleRelease
 
-      - name: List APK files after build
+      - name: List APK files
         run: |
           find webview-app/app/build/outputs/apk/release -name "*.apk"
 
