@@ -3,12 +3,11 @@ plugins {
 }
 
 android {
+    namespace "com.yourdomain.webviewapp"  // fixed namespace, no dynamic change
     compileSdkVersion 33
 
-    namespace "com.yourdomain.webviewapp" // fixed package name
-
     defaultConfig {
-        applicationId "com.yourdomain.webviewapp" // fixed package name
+        applicationId "com.yourdomain.webviewapp"  // fixed applicationId
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -31,9 +30,7 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
-            // debug config here
-        }
+        debug {}
     }
 }
 
@@ -41,4 +38,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.9.0'
+
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
 }
