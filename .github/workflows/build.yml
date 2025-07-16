@@ -58,9 +58,8 @@ jobs:
           sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Build Release APK
-        run: |
-          cd webview-app
-          ./gradlew assembleRelease
+        working-directory: webview-app
+        run: gradle assembleRelease
 
       - name: List APK files
         run: |
