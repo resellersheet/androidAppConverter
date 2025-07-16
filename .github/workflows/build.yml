@@ -6,9 +6,6 @@ on:
       site_url:
         required: true
         type: string
-      package_name:
-        required: true
-        type: string
       app_name:
         required: true
         type: string
@@ -48,11 +45,6 @@ jobs:
       - name: Set app name in strings.xml
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
-
-      - name: Replace applicationId and namespace in build.gradle
-        run: |
-          sed -i "s|applicationId \".*\"|applicationId \"${{ inputs.package_name }}\"|" webview-app/app/build.gradle
-          sed -i "s|namespace \".*\"|namespace \"${{ inputs.package_name }}\"|" webview-app/app/build.gradle
 
       - name: Replace site URL in strings.xml
         run: |
