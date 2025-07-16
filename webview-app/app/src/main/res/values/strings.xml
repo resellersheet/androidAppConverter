@@ -1,5 +1,4 @@
-
 <resources>
-    <string name="app_name">WebViewApp</string>
+    <string name="app_name">Your App Name</string>
+    <string name="site_url">https://defaultsite.com</string> <!-- will be replaced dynamically -->
 </resources>
-
