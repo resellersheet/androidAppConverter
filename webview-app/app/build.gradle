@@ -5,6 +5,8 @@ plugins {
 android {
     compileSdkVersion 33
 
+    namespace "com.default.package"  // will be replaced dynamically by sed
+
     defaultConfig {
         applicationId "com.default.package"  // will be replaced dynamically by sed
         minSdkVersion 21
