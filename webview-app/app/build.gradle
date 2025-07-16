@@ -5,10 +5,10 @@ plugins {
 android {
     compileSdkVersion 33
 
-    namespace "com.default.package"  // will be replaced dynamically by sed
+    namespace "com.yourdomain.webviewapp" // fixed package name
 
     defaultConfig {
-        applicationId "com.default.package"  // will be replaced dynamically by sed
+        applicationId "com.yourdomain.webviewapp" // fixed package name
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -41,5 +41,4 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.9.0'
-    // other dependencies as needed
 }
