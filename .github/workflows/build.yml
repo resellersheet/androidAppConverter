@@ -39,7 +39,7 @@ jobs:
       - name: Verify keystore credentials
         run: |
           echo "Checking keystore info..."
-          keytool -list -v -keystore webview-app/app/keystore/app/release-key.jks \
+          keytool -list -v -keystore webview-app/app/keystore/release-key.jks \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEY_PASSWORD" \
             -alias "$KEY_ALIAS"
