@@ -16,11 +16,6 @@ on:
         required: true
         type: string
 
-env:
-  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,7 +30,7 @@ jobs:
           java-version: 11
           distribution: temurin
 
-      - name: Set up Gradle
+      - name: Set up Gradle 7.6
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 7.6
@@ -56,8 +51,9 @@ jobs:
           sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Build Release APK
-        working-directory: webview-app
-        run: ./gradlew assembleRelease
+        run: |
+          cd webview-app
+          gradle assembleRelease
 
       - name: List APK files
         run: |
