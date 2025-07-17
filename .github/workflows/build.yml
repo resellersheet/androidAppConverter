@@ -30,6 +30,11 @@ jobs:
           java-version: 11
           distribution: temurin
 
+      - name: Set up Gradle 7.6
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.6
+
       - name: Verify keystore credentials
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -58,13 +63,12 @@ jobs:
 
       - name: Build Release APK
         run: |
-          cd webview-app
-          ./gradlew assembleRelease \
+          gradle -p webview-app assembleRelease \
             -PKEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} \
             -PKEY_ALIAS=${{ secrets.KEY_ALIAS }} \
             -PKEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
 
-      - name: List APK files
+      - name: List APK files before upload
         run: ls -l webview-app/app/build/outputs/apk/release/
 
       - name: Upload Release APK to PHP server
