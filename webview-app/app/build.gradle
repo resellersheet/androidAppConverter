@@ -15,13 +15,17 @@ android {
     }
 
     signingConfigs {
-        release {
-            storeFile file("keystore/release-key.jks")
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
-        }
+    release {
+        storeFile file("webview-app/app/keystore/app/release-key.jks")
+        storePassword System.getenv("KEYSTORE_PASSWORD")
+        keyAlias System.getenv("KEY_ALIAS")
+        keyPassword System.getenv("KEY_PASSWORD")
+
+        println "DEBUG: storePassword=${System.getenv("KEYSTORE_PASSWORD") != null ? '***' : 'null'}"
+        println "DEBUG: keyAlias=${System.getenv("KEY_ALIAS")}"
+        println "DEBUG: keyPassword=${System.getenv("KEY_PASSWORD") != null ? '***' : 'null'}"
     }
+}
 
     buildTypes {
         release {
