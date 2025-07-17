@@ -1,9 +1,3 @@
-name: Ping Test
-
-on: workflow_dispatch
-
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Ping successful"
+- name: Check if keystore exists
+  run: |
+    ls -l webview-app/app/keystore/release-key.jks
