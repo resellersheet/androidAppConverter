@@ -57,14 +57,14 @@ jobs:
         run: |
           sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: List APK files
-        run: |
-          find webview-app/app/build/outputs/apk/release -name "*.apk"
+      - name: List APK files before upload
+  run: ls -l webview-app/app/build/outputs/apk/release/
 
-      - name: Upload Release APK to PHP server
-        run: |
-          curl -X POST \
-            -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
-            -F "account_id=${{ inputs.account_id }}" \
-            -F "app_name=${{ inputs.app_name }}" \
-            https://activespreadsheet.com/upload.php
+- name: Upload Release APK to PHP server
+  run: |
+    curl -X POST \
+      -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
+      -F "account_id=${{ inputs.account_id }}" \
+      -F "app_name=${{ inputs.app_name }}" \
+      https://activespreadsheet.com/upload.php
+
