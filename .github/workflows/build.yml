@@ -30,10 +30,17 @@ jobs:
           java-version: 11
           distribution: temurin
 
-      - name: Set up Gradle 7.6
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 7.6
+      - name: Verify keystore credentials
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "Checking keystore info..."
+          keytool -list -v -keystore webview-app/keystore/release-key.jks \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -alias "$KEY_ALIAS"
 
       - name: Ensure logo folder exists
         run: mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
@@ -49,11 +56,6 @@ jobs:
       - name: Replace site URL in strings.xml
         run: |
           sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
-
-      - name: Build Release APK
-        run: |
-          cd webview-app
-          gradle assembleRelease
 
       - name: List APK files
         run: |
