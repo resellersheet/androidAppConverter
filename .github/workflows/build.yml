@@ -40,6 +40,12 @@ jobs:
           mkdir -p webview-app/app/keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
 
+      - name: Write gradle.properties with keystore info
+        run: |
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> webview-app/app/gradle.properties
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
+
       - name: Debug keystore credentials
         run: |
           keytool -list -v \
@@ -64,10 +70,6 @@ jobs:
 
       - name: Build Release APK
         working-directory: webview-app
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: gradle assembleRelease
 
       - name: List APK files before upload
