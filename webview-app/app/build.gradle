@@ -15,13 +15,14 @@ android {
     }
 
     signingConfigs {
-        release {
-            storeFile file("keystore/release-key.jks")  // Adjust path relative to build.gradle
-            storePassword project.hasProperty('KEYSTORE_PASSWORD') ? project.property('KEYSTORE_PASSWORD') : ""
-            keyAlias project.hasProperty('KEY_ALIAS') ? project.property('KEY_ALIAS') : ""
-            keyPassword project.hasProperty('KEY_PASSWORD') ? project.property('KEY_PASSWORD') : ""
-        }
+    release {
+        storeFile file("keystore/release-key.jks")
+        storePassword System.getenv("STORE_PASSWORD") ?: ""
+        keyAlias System.getenv("KEY_ALIAS") ?: ""
+        keyPassword System.getenv("KEY_PASSWORD") ?: ""
     }
+}
+
 
     buildTypes {
         release {
