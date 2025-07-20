@@ -34,7 +34,7 @@ jobs:
         run: |
           keytool -list -v \
             -keystore webview-app/app/keystore/release-key.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -storepass "${{ secrets.STORE_PASSWORD }}" \
             -keypass "${{ secrets.KEY_PASSWORD }}" \
             -alias "${{ secrets.KEY_ALIAS }}"
 
@@ -60,7 +60,11 @@ jobs:
 
       - name: Build Release APK
         working-directory: webview-app
-        run: gradle assembleRelease
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: ./gradlew assembleRelease
 
       - name: List APK files before upload
         run: ls -l webview-app/app/build/outputs/apk/release/
