@@ -30,18 +30,22 @@ jobs:
           java-version: 11
           distribution: temurin
 
-      - name: Debug keystore credentials
-        run: |
-          keytool -list -v \
-            -keystore webview-app/app/keystore/release-key.jks \
-            -storepass "${{ secrets.STORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            -alias "${{ secrets.KEY_ALIAS }}"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 7.6
+
+      - name: Decode keystore file from secret
+        run: |
+          mkdir -p webview-app/app/keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
+
+      - name: Debug keystore credentials
+        run: |
+          keytool -list -v \
+            -keystore webview-app/app/keystore/release-key.jks \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -alias "${{ secrets.KEY_ALIAS }}"
 
       - name: Ensure logo folder exists
         run: mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
@@ -61,7 +65,7 @@ jobs:
       - name: Build Release APK
         working-directory: webview-app
         env:
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: ./gradlew assembleRelease
