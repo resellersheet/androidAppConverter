@@ -1,3 +1,1 @@
-- name: Check if keystore exists
-  run: |
-    ls -l webview-app/app/keystore/release-key.jks
+
