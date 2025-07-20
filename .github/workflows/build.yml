@@ -68,7 +68,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: ./gradlew assembleRelease
+        run: gradle assembleRelease
 
       - name: List APK files before upload
         run: ls -l webview-app/app/build/outputs/apk/release/
