@@ -46,25 +46,15 @@ jobs:
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
 
-      - name: Debug keystore credentials
-        run: |
-          keytool -list -v \
-            -keystore webview-app/app/keystore/release-key.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -alias "${{ secrets.KEY_ALIAS }}"
-
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
       - name: Download user logo
         run: curl -L "${{ inputs.logo_url }}" -o logo.png
 
-      - name: Resize and replace launcher icons
+      - name: Resize and replace launcher icon
         run: |
-          convert logo.png -resize 48x48 webview-app/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          convert logo.png -resize 72x72 webview-app/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          convert logo.png -resize 96x96 webview-app/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          convert logo.png -resize 144x144 webview-app/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
           convert logo.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
       - name: Set app name in strings.xml
