@@ -57,6 +57,11 @@ jobs:
           mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
           convert logo.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
+      - name: Copy logo for splash screen
+        run: |
+          mkdir -p webview-app/app/src/main/res/drawable
+          cp logo.png webview-app/app/src/main/res/drawable/splash_logo.png
+
       - name: Set app name in strings.xml
         run: |
           sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
