@@ -53,12 +53,19 @@ jobs:
             -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
             -alias "${{ secrets.KEY_ALIAS }}"
 
-      - name: Ensure logo folder exists
-        run: mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
 
-      - name: Download logo
+      - name: Download user logo
+        run: curl -L "${{ inputs.logo_url }}" -o logo.png
+
+      - name: Resize and replace launcher icons
         run: |
-          curl -L "${{ inputs.logo_url }}" -o webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          convert logo.png -resize 48x48 webview-app/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          convert logo.png -resize 72x72 webview-app/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert logo.png -resize 96x96 webview-app/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert logo.png -resize 144x144 webview-app/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert logo.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
       - name: Set app name in strings.xml
         run: |
