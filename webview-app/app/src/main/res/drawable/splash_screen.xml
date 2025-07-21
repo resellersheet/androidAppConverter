@@ -3,7 +3,7 @@
 
     <!-- Background color -->
     <item>
-        <color android:color="#FFFFFF" />  <!-- White background, change as needed -->
+        <color android:color="#FFFFFF" /> <!-- White background -->
     </item>
 
     <!-- Optional subtle gradient overlay -->
@@ -14,6 +14,13 @@
                 android:endColor="#FFE0E0E0"
                 android:angle="90"/>
         </shape>
+    </item>
+
+    <!-- User logo centered -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash_logo"/>
     </item>
 
 </layer-list>
