@@ -74,4 +74,13 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(url);
     }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }
