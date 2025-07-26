@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -28,7 +29,12 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
 
         String url = getString(R.string.site_url);
+
+        // Enable JavaScript
         webView.getSettings().setJavaScriptEnabled(true);
+
+        // Set cache mode to LOAD_DEFAULT to use cache normally
+        webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
 
         swipeRefreshLayout.setColorSchemeResources(
             android.R.color.holo_blue_bright,
@@ -37,11 +43,17 @@ public class MainActivity extends AppCompatActivity {
             android.R.color.holo_red_light
         );
 
-        swipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
+        // Pull to refresh triggers reload with no cache
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);  // force reload ignoring cache
+            webView.reload();
+            webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);  // revert to default cache after reload
+        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
+                // Hide refresh spinner when page finished loading
                 swipeRefreshLayout.setRefreshing(false);
             }
 
@@ -66,20 +78,22 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.VISIBLE);
                     progressBar.setProgress(newProgress);
                 } else {
-                    progressBar.setProgress(100);
                     progressBar.setVisibility(View.GONE);
                 }
             }
         });
 
+        // Load the initial URL
         webView.loadUrl(url);
     }
 
     @Override
     public void onBackPressed() {
+        // Go back to previous page in WebView history if possible
         if (webView.canGoBack()) {
             webView.goBack();
         } else {
+            // Otherwise default back behavior
             super.onBackPressed();
         }
     }
