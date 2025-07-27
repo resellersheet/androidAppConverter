@@ -69,7 +69,7 @@ jobs:
 
       - name: Replace site URL in strings.xml
         run: |
-          sed -i "s|https://defaultsite.com|${{ inputs.site_url }}|" webview-app/app/src/main/res/values/strings.xml
+          sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Build Release APK
         working-directory: webview-app
