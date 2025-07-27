@@ -49,8 +49,11 @@ jobs:
       - name: Sanitize account_id for applicationId usage
         id: sanitize_id
         run: |
-          # Lowercase and replace invalid characters with underscore
-          CLEAN_ID=$(echo "${{ inputs.account_id }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')
+          RAW_ID="${{ inputs.account_id }}"
+          CLEAN_ID=$(echo "$RAW_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')
+          if [[ ! "$CLEAN_ID" =~ ^[a-z][a-z0-9_]*$ ]]; then
+            CLEAN_ID="u_$CLEAN_ID"
+          fi
           echo "clean_account_id=$CLEAN_ID" >> $GITHUB_OUTPUT
 
       - name: Replace applicationId in build.gradle dynamically
@@ -84,12 +87,11 @@ jobs:
         run: |
           sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Build Release APK
+      - name: Build Release APK only
         working-directory: webview-app
-        run: gradle assembleRelease
-
-      - name: List APK files before upload
-        run: ls -l webview-app/app/build/outputs/apk/release/
+        run: |
+          ./gradlew clean
+          ./gradlew assembleRelease
 
       - name: Upload Release APK to PHP server
         run: |
