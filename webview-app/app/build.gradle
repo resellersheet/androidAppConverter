@@ -3,11 +3,12 @@ plugins {
 }
 
 android {
-    namespace "com.yourdomain.webviewapp"  // fixed namespace, no dynamic change
+    namespace "com.yourdomain.webviewapp"  // fixed namespace (don't change dynamically)
     compileSdkVersion 33
 
     defaultConfig {
-        applicationId "com.yourdomain.webviewapp"  // fixed applicationId
+        // Placeholder applicationId — this will be replaced dynamically in CI/CD or local script
+        applicationId "com.yourdomain.webviewapp.placeholder"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -15,14 +16,13 @@ android {
     }
 
     signingConfigs {
-    release {
-        storeFile file("keystore/release-key.jks")
-        storePassword project.hasProperty('KEYSTORE_PASSWORD') ? project.property('KEYSTORE_PASSWORD') : ""
-        keyAlias project.hasProperty('KEY_ALIAS') ? project.property('KEY_ALIAS') : ""
-        keyPassword project.hasProperty('KEY_PASSWORD') ? project.property('KEY_PASSWORD') : ""
+        release {
+            storeFile file("keystore/release-key.jks")
+            storePassword project.hasProperty('KEYSTORE_PASSWORD') ? project.property('KEYSTORE_PASSWORD') : ""
+            keyAlias project.hasProperty('KEY_ALIAS') ? project.property('KEY_ALIAS') : ""
+            keyPassword project.hasProperty('KEY_PASSWORD') ? project.property('KEY_PASSWORD') : ""
+        }
     }
-}
-
 
     buildTypes {
         release {
@@ -42,6 +42,5 @@ dependencies {
 
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
-     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }
