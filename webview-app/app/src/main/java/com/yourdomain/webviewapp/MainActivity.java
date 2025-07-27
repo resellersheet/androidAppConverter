@@ -19,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private String homeUrl;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,13 +29,15 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         webView = findViewById(R.id.webview);
-
-        String url = getString(R.string.site_url);
+        homeUrl = getString(R.string.site_url);
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true); // For better site compatibility
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setAppCacheEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
 
         swipeRefreshLayout.setColorSchemeResources(
             android.R.color.holo_blue_bright,
@@ -42,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
             android.R.color.holo_red_light
         );
 
-        // Refresh behavior
         swipeRefreshLayout.setOnRefreshListener(() -> {
             webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.reload();
@@ -55,19 +58,23 @@ public class MainActivity extends AppCompatActivity {
                 swipeRefreshLayout.setRefreshing(false);
             }
 
-            // For old Android versions
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return true;
+                // Allow only http and https to load inside WebView
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false; // Load inside WebView
+                }
+                return true; // Block anything else (or handle with intent)
             }
 
-            // For Android N+ (API 24+)
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                view.loadUrl(request.getUrl().toString());
-                return true;
+                String url = request.getUrl().toString();
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false; // Load in WebView
+                }
+                return true; // Otherwise block or handle intent
             }
         });
 
@@ -83,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Load the site
-        webView.loadUrl(url);
+        // Initial load
+        webView.loadUrl(homeUrl);
     }
 
     @Override
