@@ -46,6 +46,19 @@ jobs:
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
 
+      - name: Sanitize account_id for applicationId usage
+        id: sanitize_id
+        run: |
+          # Lowercase and replace invalid characters with underscore
+          CLEAN_ID=$(echo "${{ inputs.account_id }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')
+          echo "clean_account_id=$CLEAN_ID" >> $GITHUB_OUTPUT
+
+      - name: Replace applicationId in build.gradle dynamically
+        run: |
+          APP_ID="com.yourdomain.webviewapp.${{ steps.sanitize_id.outputs.clean_account_id }}"
+          echo "Using applicationId: $APP_ID"
+          sed -i "s|applicationId \".*\"|applicationId \"$APP_ID\"|" webview-app/app/build.gradle
+
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
@@ -71,12 +84,14 @@ jobs:
         run: |
           sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Build Release APK
+      - name: Build Release APK and AAB
         working-directory: webview-app
-        run: gradle assembleRelease
+        run: |
+          ./gradlew clean
+          ./gradlew assembleRelease bundleRelease
 
-      - name: List APK files before upload
-        run: ls -l webview-app/app/build/outputs/apk/release/
+      - name: List APK and AAB files before upload
+        run: ls -l webview-app/app/build/outputs/apk/release/ && ls -l webview-app/app/build/outputs/bundle/release/
 
       - name: Upload Release APK to PHP server
         run: |
@@ -85,3 +100,11 @@ jobs:
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
             https://activespreadsheet.com/upload.php
+
+      - name: Upload Release AAB to PHP server
+        run: |
+          curl -X POST \
+            -F "aab_file=@webview-app/app/build/outputs/bundle/release/app-release.aab" \
+            -F "account_id=${{ inputs.account_id }}" \
+            -F "app_name=${{ inputs.app_name }}" \
+            https://activespreadsheet.com/upload_aab.php
