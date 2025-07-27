@@ -20,21 +20,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        webView = findViewById(R.id.webView);
+        // Use the correct ID from your layout: R.id.webview (lowercase "w")
+        webView = findViewById(R.id.webview);
 
-        // Configure WebView
+        // Configure WebView settings
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        // Prevent opening external browser
+        // Ensure all links open inside the app
         webView.setWebViewClient(new WebViewClient());
 
-        // Optional: Enables support for JS dialogs and page loading progress
+        // Optional: show loading progress, alerts, etc.
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Load website
+        // Load the desired website
         webView.loadUrl(WEBSITE_URL);
     }
 
