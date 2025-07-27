@@ -23,7 +23,7 @@
             android:layout_gravity="top"
             android:indeterminate="false"
             android:progress="0"
-            android:progressTint="@color/holo_blue_bright" />
+            android:progressTint="@android:color/holo_blue_bright" />
 
     </FrameLayout>
 
