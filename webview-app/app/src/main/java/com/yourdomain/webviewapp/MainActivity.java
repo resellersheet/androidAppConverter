@@ -1,3 +1,4 @@
+package com.yourdomain.webviewapp;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
