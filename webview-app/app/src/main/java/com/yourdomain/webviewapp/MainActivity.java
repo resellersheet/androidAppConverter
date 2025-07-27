@@ -30,11 +30,10 @@ public class MainActivity extends AppCompatActivity {
 
         String url = getString(R.string.site_url);
 
-        // Enable JavaScript
-        webView.getSettings().setJavaScriptEnabled(true);
-
-        // Set cache mode to LOAD_DEFAULT to use cache normally
-        webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true); // For better site compatibility
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         swipeRefreshLayout.setColorSchemeResources(
             android.R.color.holo_blue_bright,
@@ -43,26 +42,27 @@ public class MainActivity extends AppCompatActivity {
             android.R.color.holo_red_light
         );
 
-        // Pull to refresh triggers reload with no cache
+        // Refresh behavior
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);  // force reload ignoring cache
+            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.reload();
-            webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);  // revert to default cache after reload
+            webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
         });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                // Hide refresh spinner when page finished loading
                 swipeRefreshLayout.setRefreshing(false);
             }
 
+            // For old Android versions
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
                 return true;
             }
 
+            // For Android N+ (API 24+)
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -83,17 +83,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Load the initial URL
+        // Load the site
         webView.loadUrl(url);
     }
 
     @Override
     public void onBackPressed() {
-        // Go back to previous page in WebView history if possible
         if (webView.canGoBack()) {
             webView.goBack();
         } else {
-            // Otherwise default back behavior
             super.onBackPressed();
         }
     }
