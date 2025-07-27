@@ -89,9 +89,7 @@ jobs:
 
       - name: Build Release APK only
         working-directory: webview-app
-        run: |
-          ./gradlew clean
-          ./gradlew assembleRelease
+        run: gradle assembleRelease
 
       - name: Upload Release APK to PHP server
         run: |
