@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-    private static final String WEBSITE_URL = "https://yourdomain.com"; // Replace with dynamic input if needed
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -20,23 +19,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Use the correct ID from your layout: R.id.webview (lowercase "w")
         webView = findViewById(R.id.webview);
 
-        // Configure WebView settings
+        // Get URL dynamically from strings.xml
+        String websiteUrl = getString(R.string.site_url);
+
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        // Ensure all links open inside the app
         webView.setWebViewClient(new WebViewClient());
-
-        // Optional: show loading progress, alerts, etc.
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Load the desired website
-        webView.loadUrl(WEBSITE_URL);
+        // Load the dynamic URL
+        webView.loadUrl(websiteUrl);
     }
 
     @Override
