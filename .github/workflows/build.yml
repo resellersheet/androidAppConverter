@@ -84,14 +84,12 @@ jobs:
         run: |
           sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
-      - name: Build Release APK and AAB
+      - name: Build Release APK
         working-directory: webview-app
-        run: |
-          ./gradlew clean
-          ./gradlew assembleRelease bundleRelease
+        run: gradle assembleRelease
 
-      - name: List APK and AAB files before upload
-        run: ls -l webview-app/app/build/outputs/apk/release/ && ls -l webview-app/app/build/outputs/bundle/release/
+      - name: List APK files before upload
+        run: ls -l webview-app/app/build/outputs/apk/release/
 
       - name: Upload Release APK to PHP server
         run: |
@@ -100,11 +98,3 @@ jobs:
             -F "account_id=${{ inputs.account_id }}" \
             -F "app_name=${{ inputs.app_name }}" \
             https://activespreadsheet.com/upload.php
-
-      - name: Upload Release AAB to PHP server
-        run: |
-          curl -X POST \
-            -F "aab_file=@webview-app/app/build/outputs/bundle/release/app-release.aab" \
-            -F "account_id=${{ inputs.account_id }}" \
-            -F "app_name=${{ inputs.app_name }}" \
-            https://activespreadsheet.com/upload_aab.php
