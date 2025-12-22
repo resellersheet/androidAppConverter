@@ -95,11 +95,11 @@ jobs:
         working-directory: webview-app
         run: gradle bundleRelease
 
-      - name: Upload APK and AAB to PHP server
-        run: |
-          curl -X POST \
-            -F "apk_file=@webview-app/app/build/outputs/apk/release/app-release.apk" \
-            -F "aab_file=@webview-app/app/build/outputs/bundle/release/app-release.aab" \
-            -F "account_id=${{ inputs.account_id }}" \
-            -F "app_name=${{ inputs.app_name }}" \
-            https://activespreadsheet.com/upload.php
+      # ✅ Replace this section with GitHub artifact upload
+      - name: Upload APK & AAB as GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app_name }}-build
+          path: |
+            webview-app/app/build/outputs/apk/release/app-release.apk
+            webview-app/app/build/outputs/bundle/release/app-release.aab
