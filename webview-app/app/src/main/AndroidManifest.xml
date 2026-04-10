@@ -1,31 +1,47 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yourdomain.webviewapp">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Add this line to allow Internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <application hereis my code 
+    <application
         android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- Splash Activity (Launcher) -->
+        <!-- Splash Screen -->
         <activity
             android:name=".SplashActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <!-- Main WebView Activity -->
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true" />
-        
+            android:exported="true"
+            android:launchMode="singleTask">
+
+            <!-- Deep Link -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="myapp"
+                    android:host="login-success" />
+            </intent-filter>
+
+        </activity>
+
     </application>
 
 </manifest>
