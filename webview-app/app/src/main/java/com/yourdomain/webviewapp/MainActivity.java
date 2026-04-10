@@ -107,10 +107,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.loadUrl(url);
+        // ✅ STEP 4 + 5 ADDED HERE (Deep Link Handler)
+        Uri data = getIntent().getData();
+
+        if (data != null && "myapp".equals(data.getScheme()) && "login-success".equals(data.getHost())) {
+
+            String redirect = data.getQueryParameter("redirect");
+
+            if ("home".equals(redirect)) {
+                webView.loadUrl("https://themchat.com/home.php");
+            } else {
+                webView.loadUrl("https://themchat.com/afterSignupPage.php");
+            }
+
+        } else {
+            webView.loadUrl(url);
+        }
     }
 
-    // ✅ CORRECT POSITION (outside onCreate)
     @Override
     protected void onResume() {
         super.onResume();
