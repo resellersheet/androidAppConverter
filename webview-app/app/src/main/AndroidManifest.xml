@@ -1,7 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yourdomain.webviewapp">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Add this line to allow Internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -21,40 +19,26 @@
             </intent-filter>
         </activity>
 
-        <!-- Main WebView Activity -->
+        <!-- Main WebView Activity (ONLY ONE ENTRY) -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
 
-            <!-- ✅ ADDED: Deep link for Google login return -->
+            <!-- Deep link for Google login return -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <!-- Custom scheme -->
-                <data android:scheme="myapp" android:host="login-success" />
+                <data
+                    android:scheme="myapp"
+                    android:host="login-success" />
             </intent-filter>
 
         </activity>
-        <activity
-    android:name=".MainActivity"
-    android:launchMode="singleTask">
-    
-    <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
 
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-
-        <data
-            android:scheme="myapp"
-            android:host="login-success"/>
-    </intent-filter>
-
-</activity>
-        
     </application>
 
 </manifest>
