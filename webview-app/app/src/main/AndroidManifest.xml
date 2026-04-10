@@ -1,9 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.yourdomain.webviewapp">
 
+    <!-- Add this line to allow Internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <application
+    <application hereis my code 
         android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
@@ -19,26 +21,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Main WebView Activity (ONLY ONE ENTRY) -->
+        <!-- Main WebView Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:launchMode="singleTask">
-
-            <!-- Deep link for Google login return -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:scheme="myapp"
-                    android:host="login-success" />
-            </intent-filter>
-
-        </activity>
-
+            android:exported="true" />
+        
     </application>
 
 </manifest>
