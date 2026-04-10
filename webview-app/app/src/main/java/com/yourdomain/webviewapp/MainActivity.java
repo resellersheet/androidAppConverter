@@ -1,5 +1,6 @@
 package com.yourdomain.webviewapp;
-
+import android.content.Intent;
+import android.net.Uri;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,12 +54,52 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
         });
 
+          // 👇 ADD IT HERE (after onCreate, before final bracket)
+    @Override
+    protected void onResume() {
+        super.onResume();
+        webView.reload();
+    }
+
         webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                progressBar.setVisibility(View.GONE);
-                swipeRefreshLayout.setRefreshing(false);
-            }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        progressBar.setVisibility(View.GONE);
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+
+        // 🔥 ADD THIS BLOCK (Google OAuth fix)
+        if (url.contains("accounts.google.com")) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            view.getContext().startActivity(intent);
+            return true;
+        }
+
+        view.loadUrl(url);
+        return true;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+
+        String url = request.getUrl().toString();
+
+        // 🔥 ADD THIS BLOCK (Google OAuth fix)
+        if (url.contains("accounts.google.com")) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            view.getContext().startActivity(intent);
+            return true;
+        }
+
+        view.loadUrl(url);
+        return true;
+    }
+});
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
