@@ -1,4 +1,5 @@
 package com.yourdomain.webviewapp;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.annotation.SuppressLint;
@@ -32,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         webView = findViewById(R.id.webview);
 
-        // Fix scroll conflict: allow refresh only when at top
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
 
         String url = getString(R.string.site_url);
@@ -43,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         swipeRefreshLayout.setColorSchemeResources(
-            android.R.color.holo_blue_bright,
-            android.R.color.holo_green_light,
-            android.R.color.holo_orange_light,
-            android.R.color.holo_red_light
+                android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light
         );
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
@@ -54,55 +54,25 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
         });
 
-          // 👇 ADD IT HERE (after onCreate, before final bracket)
-    @Override
-    protected void onResume() {
-        super.onResume();
-        webView.reload();
-    }
-
+        // ✅ FIXED WebViewClient (NO DUPLICATES)
         webView.setWebViewClient(new WebViewClient() {
 
-    @Override
-    public void onPageFinished(WebView view, String url) {
-        progressBar.setVisibility(View.GONE);
-        swipeRefreshLayout.setRefreshing(false);
-    }
-
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-
-        // 🔥 ADD THIS BLOCK (Google OAuth fix)
-        if (url.contains("accounts.google.com")) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            view.getContext().startActivity(intent);
-            return true;
-        }
-
-        view.loadUrl(url);
-        return true;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-
-        String url = request.getUrl().toString();
-
-        // 🔥 ADD THIS BLOCK (Google OAuth fix)
-        if (url.contains("accounts.google.com")) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            view.getContext().startActivity(intent);
-            return true;
-        }
-
-        view.loadUrl(url);
-        return true;
-    }
-});
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                progressBar.setVisibility(View.GONE);
+                swipeRefreshLayout.setRefreshing(false);
+            }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+
+                // 🔥 Google OAuth fix
+                if (url.contains("accounts.google.com")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    view.getContext().startActivity(intent);
+                    return true;
+                }
+
                 view.loadUrl(url);
                 return true;
             }
@@ -110,7 +80,17 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                view.loadUrl(request.getUrl().toString());
+
+                String url = request.getUrl().toString();
+
+                // 🔥 Google OAuth fix
+                if (url.contains("accounts.google.com")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    view.getContext().startActivity(intent);
+                    return true;
+                }
+
+                view.loadUrl(url);
                 return true;
             }
         });
@@ -127,8 +107,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Initial page load
         webView.loadUrl(url);
+    }
+
+    // ✅ CORRECT POSITION (outside onCreate)
+    @Override
+    protected void onResume() {
+        super.onResume();
+        webView.reload();
     }
 
     @Override
