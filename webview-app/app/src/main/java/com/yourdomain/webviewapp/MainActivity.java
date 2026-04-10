@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
         });
 
-        // ✅ FIXED WebViewClient (NO DUPLICATES)
+        // WebViewClient (unchanged)
         webView.setWebViewClient(new WebViewClient() {
 
             @Override
@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
 
-                // 🔥 Google OAuth fix
                 if (url.contains("accounts.google.com")) {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
@@ -83,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
 
                 String url = request.getUrl().toString();
 
-                // 🔥 Google OAuth fix
                 if (url.contains("accounts.google.com")) {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
@@ -107,10 +105,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ✅ STEP 4 + 5 ADDED HERE (Deep Link Handler)
-        Uri data = getIntent().getData();
+        // ✅ STEP 4: Handle deep link on launch
+        handleDeepLink(getIntent());
+    }
 
-        if (data != null && "myapp".equals(data.getScheme()) && "login-success".equals(data.getHost())) {
+    // ✅ STEP 2 + 3: REQUIRED FOR RETURNING FROM CHROME
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    // ✅ STEP 3: CENTRAL DEEP LINK HANDLER
+    private void handleDeepLink(Intent intent) {
+
+        Uri data = intent.getData();
+
+        if (data != null &&
+                "myapp".equals(data.getScheme()) &&
+                "login-success".equals(data.getHost())) {
 
             String redirect = data.getQueryParameter("redirect");
 
@@ -120,8 +134,12 @@ public class MainActivity extends AppCompatActivity {
                 webView.loadUrl("https://themchat.com/afterSignupPage.php");
             }
 
-        } else {
-            webView.loadUrl(url);
+            return;
+        }
+
+        // fallback (normal load)
+        if (webView != null) {
+            webView.loadUrl(getString(R.string.site_url));
         }
     }
 
