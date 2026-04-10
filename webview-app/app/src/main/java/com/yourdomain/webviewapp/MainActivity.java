@@ -1,7 +1,5 @@
 package com.yourdomain.webviewapp;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         webView = findViewById(R.id.webview);
 
+        // Fix scroll conflict: allow refresh only when at top
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
 
         String url = getString(R.string.site_url);
@@ -43,10 +42,10 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         swipeRefreshLayout.setColorSchemeResources(
-                android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light,
-                android.R.color.holo_red_light
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
         );
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
@@ -54,9 +53,7 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
         });
 
-        // WebViewClient (unchanged)
         webView.setWebViewClient(new WebViewClient() {
-
             @Override
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
@@ -65,13 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-
-                if (url.contains("accounts.google.com")) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    view.getContext().startActivity(intent);
-                    return true;
-                }
-
                 view.loadUrl(url);
                 return true;
             }
@@ -79,16 +69,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-
-                String url = request.getUrl().toString();
-
-                if (url.contains("accounts.google.com")) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    view.getContext().startActivity(intent);
-                    return true;
-                }
-
-                view.loadUrl(url);
+                view.loadUrl(request.getUrl().toString());
                 return true;
             }
         });
@@ -105,48 +86,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ✅ STEP 4: Handle deep link on launch
-        handleDeepLink(getIntent());
-    }
-
-    // ✅ STEP 2 + 3: REQUIRED FOR RETURNING FROM CHROME
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        handleDeepLink(intent);
-    }
-
-    // ✅ STEP 3: CENTRAL DEEP LINK HANDLER
-    private void handleDeepLink(Intent intent) {
-
-        Uri data = intent.getData();
-
-        if (data != null &&
-                "myapp".equals(data.getScheme()) &&
-                "login-success".equals(data.getHost())) {
-
-            String redirect = data.getQueryParameter("redirect");
-
-            if ("home".equals(redirect)) {
-                webView.loadUrl("https://themchat.com/home.php");
-            } else {
-                webView.loadUrl("https://themchat.com/afterSignupPage.php");
-            }
-
-            return;
-        }
-
-        // fallback (normal load)
-        if (webView != null) {
-            webView.loadUrl(getString(R.string.site_url));
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        webView.reload();
+        // Initial page load
+        webView.loadUrl(url);
     }
 
     @Override
