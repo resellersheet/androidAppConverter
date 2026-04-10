@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     private void sendTokenToServer(String token) {
         new Thread(() -> {
             try {
-                URL url = new URL("https://themchat.com/api/save_fcm_token.php");
+                URL url = new URL("https://themchat.com/save_fcm_token.php");
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
