@@ -15,6 +15,13 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+// ✅ NEW IMPORTS
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
@@ -30,6 +37,17 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         webView = findViewById(R.id.webview);
+
+        // ✅ GET FCM TOKEN AND SEND TO SERVER
+        FirebaseMessaging.getInstance().getToken()
+            .addOnCompleteListener(task -> {
+                if (!task.isSuccessful()) return;
+
+                String token = task.getResult();
+
+                // 🔥 Send token to your PHP server
+                sendTokenToServer(token);
+            });
 
         // Fix scroll conflict: allow refresh only when at top
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
@@ -88,6 +106,34 @@ public class MainActivity extends AppCompatActivity {
 
         // Initial page load
         webView.loadUrl(url);
+    }
+
+    // ✅ NEW METHOD: Send token to PHP API
+    private void sendTokenToServer(String token) {
+        new Thread(() -> {
+            try {
+                URL url = new URL("https://themchat.com/api/save_fcm_token.php");
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+                // 🔥 Send token (you can also send user_id if available)
+                String postData = "token=" + token;
+
+                OutputStream os = conn.getOutputStream();
+                os.write(postData.getBytes());
+                os.flush();
+                os.close();
+
+                conn.getResponseCode(); // trigger request
+                conn.disconnect();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @Override
