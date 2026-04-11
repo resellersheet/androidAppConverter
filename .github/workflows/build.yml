@@ -46,21 +46,7 @@ jobs:
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
 
-      - name: Sanitize account_id for applicationId usage
-        id: sanitize_id
-        run: |
-          RAW_ID="${{ inputs.account_id }}"
-          CLEAN_ID=$(echo "$RAW_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')
-          if [[ ! "$CLEAN_ID" =~ ^[a-z][a-z0-9_]*$ ]]; then
-            CLEAN_ID="u_$CLEAN_ID"
-          fi
-          echo "clean_account_id=$CLEAN_ID" >> $GITHUB_OUTPUT
-
-      - name: Replace applicationId in build.gradle dynamically
-        run: |
-          APP_ID="com.yourdomain.webviewapp.${{ steps.sanitize_id.outputs.clean_account_id }}"
-          echo "Using applicationId: $APP_ID"
-          sed -i "s|applicationId \".*\"|applicationId \"$APP_ID\"|" webview-app/app/build.gradle
+      # ❌ REMOVED dynamic applicationId modification (THIS FIXES YOUR ERROR)
 
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
@@ -95,7 +81,6 @@ jobs:
         working-directory: webview-app
         run: gradle bundleRelease
 
-      # ✅ Replace this section with GitHub artifact upload
       - name: Upload APK & AAB as GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
