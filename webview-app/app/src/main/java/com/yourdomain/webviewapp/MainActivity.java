@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -15,7 +16,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-// ✅ NEW IMPORTS
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.OutputStream;
@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private String userId = null; // ✅ will be set from WebView
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,36 +40,45 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         webView = findViewById(R.id.webview);
 
-        // ✅ GET FCM TOKEN AND SEND TO SERVER
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+
+        // ✅ Add JS interface
+        webView.addJavascriptInterface(new WebAppInterface(), "Android");
+
+        // ✅ Get FCM token
         FirebaseMessaging.getInstance().getToken()
-            .addOnCompleteListener(task -> {
-                if (!task.isSuccessful()) return;
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) return;
 
-                String token = task.getResult();
+                    String token = task.getResult();
 
-                // 🔥 Send token to your PHP server
-                sendTokenToServer(token);
-            });
+                    // Wait until userId is available
+                    new Thread(() -> {
+                        try {
+                            int retries = 0;
 
-        // Fix scroll conflict: allow refresh only when at top
+                            while (userId == null && retries < 10) {
+                                Thread.sleep(1000);
+                                retries++;
+                            }
+
+                            if (userId != null) {
+                                sendTokenToServer(token, userId);
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                });
+
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
 
         String url = getString(R.string.site_url);
 
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-
-        swipeRefreshLayout.setColorSchemeResources(
-            android.R.color.holo_blue_bright,
-            android.R.color.holo_green_light,
-            android.R.color.holo_orange_light,
-            android.R.color.holo_red_light
-        );
-
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.reload();
         });
 
@@ -76,6 +87,14 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(false);
+
+                // 🔥 Inject JS to fetch user ID if needed
+                webView.evaluateJavascript(
+                        "javascript:(function() { " +
+                                "if (window.Android && window.user_id) { Android.setUserId(window.user_id); }" +
+                                "})()",
+                        null
+                );
             }
 
             @Override
@@ -92,24 +111,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                if (newProgress < 100) {
-                    progressBar.setVisibility(View.VISIBLE);
-                    progressBar.setProgress(newProgress);
-                } else {
-                    progressBar.setVisibility(View.GONE);
-                }
-            }
-        });
+        webView.setWebChromeClient(new WebChromeClient());
 
-        // Initial page load
         webView.loadUrl(url);
     }
 
-    // ✅ NEW METHOD: Send token to PHP API
-    private void sendTokenToServer(String token) {
+    // ✅ JS Interface
+    public class WebAppInterface {
+        @JavascriptInterface
+        public void setUserId(String id) {
+            userId = id;
+        }
+    }
+
+    // ✅ Send token + user_id
+    private void sendTokenToServer(String token, String userId) {
         new Thread(() -> {
             try {
                 URL url = new URL("https://themchat.com/save_fcm_token.php");
@@ -119,15 +135,14 @@ public class MainActivity extends AppCompatActivity {
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-                // 🔥 Send token (you can also send user_id if available)
-                String postData = "token=" + token;
+                String postData = "token=" + token + "&user_id=" + userId;
 
                 OutputStream os = conn.getOutputStream();
                 os.write(postData.getBytes());
                 os.flush();
                 os.close();
 
-                conn.getResponseCode(); // trigger request
+                conn.getResponseCode();
                 conn.disconnect();
 
             } catch (Exception e) {
