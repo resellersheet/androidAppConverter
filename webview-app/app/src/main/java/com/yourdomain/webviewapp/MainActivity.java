@@ -1,8 +1,10 @@
 package com.yourdomain.webviewapp;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -18,19 +20,21 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     private WebView webView;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
-
-    // Store FCM token to send after page loads (so session cookie exists)
-    private String pendingFcmToken = null;
-    private boolean tokenSent = false;
+    private SharedPreferences fcmPrefs;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -38,31 +42,43 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progressBar    = findViewById(R.id.progressBar);
+        fcmPrefs = getSharedPreferences("fcm_prefs", MODE_PRIVATE);
+
+        progressBar = findViewById(R.id.progressBar);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
-        webView        = findViewById(R.id.webview);
+        webView = findViewById(R.id.webview);
 
-        // ─── Enable cookie persistence ───────────────────────────────────────
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.setAcceptCookie(true);
-        cookieManager.setAcceptThirdPartyCookies(webView, true);
+        // ✅ Enable cookies (required for PHP session auth)
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
 
-        // ─── Get FCM token early; send it once the page (session) is ready ───
+        // ✅ Fetch FCM token and store in SharedPreferences if changed
         FirebaseMessaging.getInstance().getToken()
             .addOnCompleteListener(task -> {
-                if (!task.isSuccessful()) return;
-                pendingFcmToken = task.getResult();
-                // If the page already finished loading before we got the token,
-                // send it right now.
-                if (tokenSent == false && pendingFcmToken != null) {
-                    trySendToken();
+                if (!task.isSuccessful()) {
+                    Log.w(TAG, "FCM token fetch failed", task.getException());
+                    return;
+                }
+                String token = task.getResult();
+                String savedToken = fcmPrefs.getString("pending_token", "");
+
+                if (!token.equals(savedToken)) {
+                    fcmPrefs.edit()
+                        .putString("pending_token", token)
+                        .putBoolean("token_sent", false)
+                        .apply();
+                    Log.d(TAG, "New FCM token stored, will send after login");
                 }
             });
 
-        // ─── Swipe-refresh setup ─────────────────────────────────────────────
-        swipeRefreshLayout.setOnChildScrollUpCallback(
-            (parent, child) -> webView.getScrollY() > 0
-        );
+        swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
+
+        String siteUrl = getString(R.string.site_url);
+
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         swipeRefreshLayout.setColorSchemeResources(
             android.R.color.holo_blue_bright,
@@ -76,13 +92,6 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
         });
 
-        // ─── WebView settings ────────────────────────────────────────────────
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-
-        // ─── WebViewClient ───────────────────────────────────────────────────
         webView.setWebViewClient(new WebViewClient() {
 
             @Override
@@ -90,12 +99,15 @@ public class MainActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(false);
 
-                // Persist cookies to disk so subsequent HTTP calls can use them
-                CookieManager.getInstance().flush();
+                // ✅ After every page load, attempt to send pending token
+                boolean tokenSent = fcmPrefs.getBoolean("token_sent", false);
+                String pendingToken = fcmPrefs.getString("pending_token", "");
 
-                // Send FCM token now that the session cookie is established
-                if (!tokenSent && pendingFcmToken != null) {
-                    trySendToken();
+                if (!tokenSent && !pendingToken.isEmpty()) {
+                    String cookies = CookieManager.getInstance().getCookie(url);
+                    if (cookies != null && cookies.contains("PHPSESSID")) {
+                        sendTokenToServer(pendingToken, cookies);
+                    }
                 }
             }
 
@@ -113,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ─── WebChromeClient ─────────────────────────────────────────────────
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
@@ -126,54 +137,52 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ─── Load site ───────────────────────────────────────────────────────
-        webView.loadUrl(getString(R.string.site_url));
+        webView.loadUrl(siteUrl);
     }
 
     /**
-     * Send FCM token to server WITH the session cookie so PHP knows who is
-     * logged in. Uses the same cookie jar as the WebView.
+     * ✅ Send FCM token to PHP using WebView session cookies so PHP can identify the user
      */
-    private void trySendToken() {
-        if (tokenSent || pendingFcmToken == null) return;
-        tokenSent = true; // prevent duplicate calls
-
-        final String token = pendingFcmToken;
-
+    private void sendTokenToServer(String token, String cookies) {
         new Thread(() -> {
             try {
-                // ── Grab cookies that WebView stored for your domain ──────────
-                String cookieString = CookieManager.getInstance()
-                    .getCookie("https://themchat.com");
-
                 URL url = new URL("https://themchat.com/api/save_fcm_token.php");
+
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type",
-                    "application/x-www-form-urlencoded");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setRequestProperty("Cookie", cookies);
+                conn.setRequestProperty("Referer", "https://themchat.com/");
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
 
-                // ── Attach the session cookie ─────────────────────────────────
-                if (cookieString != null && !cookieString.isEmpty()) {
-                    conn.setRequestProperty("Cookie", cookieString);
-                }
-
-                // ── POST body ─────────────────────────────────────────────────
-                String postData = "token=" +
-                    java.net.URLEncoder.encode(token, "UTF-8");
-
+                String postData = "token=" + URLEncoder.encode(token, "UTF-8");
                 OutputStream os = conn.getOutputStream();
                 os.write(postData.getBytes("UTF-8"));
                 os.flush();
                 os.close();
 
                 int responseCode = conn.getResponseCode();
-                android.util.Log.d("FCM", "Token save response: " + responseCode);
+                BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream())
+                );
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) response.append(line);
+                reader.close();
                 conn.disconnect();
 
+                String body = response.toString();
+                Log.d(TAG, "Token save response (" + responseCode + "): " + body);
+
+                if (body.contains("\"success\"")) {
+                    fcmPrefs.edit().putBoolean("token_sent", true).apply();
+                    Log.d(TAG, "FCM token saved to server successfully!");
+                }
+
             } catch (Exception e) {
-                e.printStackTrace();
-                tokenSent = false; // allow retry on next page load
+                Log.e(TAG, "Failed to send FCM token: " + e.getMessage(), e);
             }
         }).start();
     }
