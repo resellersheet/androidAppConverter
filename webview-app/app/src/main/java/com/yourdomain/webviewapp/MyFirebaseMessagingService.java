@@ -13,68 +13,59 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-    private static final String TAG = "FCMService";
+    private static final String TAG        = "FCMService";
     private static final String CHANNEL_ID = "themchat_notifications";
 
     /**
-     * ✅ Called whenever Firebase generates a NEW token
-     * (after reinstall, token expiry, or app data clear)
-     * This ensures your DB always has a fresh token.
+     * ✅ Called by Firebase whenever a new token is generated
+     * (reinstall, app data clear, token expiry)
+     * Stores it in SharedPreferences so MainActivity injects it into the login form
      */
     @Override
     public void onNewToken(String token) {
         super.onNewToken(token);
-        Log.d(TAG, "New FCM token generated: " + token);
+        Log.d(TAG, "New FCM token generated");
 
-        // ✅ Save new token to server automatically
-        // NOTE: We can't use session cookies here (no WebView context)
-        // So we save it to SharedPreferences and send it next time MainActivity loads
+        // Store token — MainActivity will inject it into login form on next login
         getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
             .edit()
-            .putString("pending_token", token)
-            .putBoolean("token_sent", false)
+            .putString("fcm_token", token)
             .apply();
-
-        Log.d(TAG, "New token stored in SharedPreferences — will be sent on next app open");
     }
 
     /**
-     * ✅ Called when a push notification arrives while app is in FOREGROUND
-     * Without this, foreground notifications are silently ignored on Android
+     * ✅ Called when notification arrives while app is in FOREGROUND
+     * Android suppresses FCM notifications in foreground by default —
+     * this method shows them manually
      */
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.d(TAG, "FCM message received from: " + remoteMessage.getFrom());
+        Log.d(TAG, "FCM message received");
 
-        // ✅ Get notification data
         String title = "New Notification";
         String body  = "Tap to view";
 
         if (remoteMessage.getNotification() != null) {
-            title = remoteMessage.getNotification().getTitle() != null
-                ? remoteMessage.getNotification().getTitle() : title;
-            body  = remoteMessage.getNotification().getBody() != null
-                ? remoteMessage.getNotification().getBody() : body;
+            if (remoteMessage.getNotification().getTitle() != null)
+                title = remoteMessage.getNotification().getTitle();
+            if (remoteMessage.getNotification().getBody() != null)
+                body = remoteMessage.getNotification().getBody();
         }
 
-        // ✅ Show notification manually when app is in foreground
         showNotification(title, body);
     }
 
     /**
-     * ✅ Build and display the notification
+     * ✅ Build and display the notification on screen
      */
     private void showNotification(String title, String body) {
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager manager =
+            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Create channel (required for Android 8+)
+        // Required for Android 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
@@ -86,7 +77,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             manager.createNotificationChannel(channel);
         }
 
-        // Tap notification → open app
+        // Tap notification → open MainActivity
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -94,13 +85,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification) // ✅ Make sure this icon exists in res/drawable
-            .setContentTitle(title)
-            .setContentText(body)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent);
+        NotificationCompat.Builder builder =
+            new NotificationCompat.Builder(this, CHANNEL_ID)
+                // ✅ FIXED: uses your existing app launcher icon — no missing resource
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent);
 
         manager.notify((int) System.currentTimeMillis(), builder.build());
     }
