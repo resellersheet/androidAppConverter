@@ -40,13 +40,20 @@ jobs:
           mkdir -p webview-app/app/keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
 
+      # ✅ NEW STEP: PRINT SHA1
+      - name: Print SHA1 from keystore
+        run: |
+          keytool -list -v \
+            -keystore webview-app/app/keystore/release-key.jks \
+            -alias ${{ secrets.KEY_ALIAS }} \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} | grep SHA1
+
       - name: Write gradle.properties with keystore info
         run: |
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
-
-      # ❌ REMOVED dynamic applicationId modification (THIS FIXES YOUR ERROR)
 
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
