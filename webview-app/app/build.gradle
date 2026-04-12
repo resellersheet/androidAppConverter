@@ -2,11 +2,9 @@ plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services' // ✅ Step 2: Google Services plugin
 }
-
 android {
     namespace "com.yourdomain.webviewapp"
     compileSdkVersion 33
-
     defaultConfig {
         applicationId "com.yourdomain.webviewapp"
         minSdkVersion 21
@@ -14,7 +12,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-
     signingConfigs {
         release {
             storeFile file("keystore/release-key.jks")
@@ -23,7 +20,6 @@ android {
             keyPassword project.hasProperty('KEY_PASSWORD') ? project.property('KEY_PASSWORD') : ""
         }
     }
-
     buildTypes {
         release {
             signingConfig signingConfigs.release
@@ -34,16 +30,15 @@ android {
         debug {}
     }
 }
-
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.9.0'
-
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-
     // ✅ Step 1: Firebase Messaging (FCM)
     implementation 'com.google.firebase:firebase-messaging:23.4.1'
+    // ✅ Step 3: Google Sign-In (for native Google login in WebView)
+    implementation 'com.google.android.gms:play-services-auth:21.0.0'
 }
