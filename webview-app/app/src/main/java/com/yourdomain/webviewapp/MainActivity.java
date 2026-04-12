@@ -1,6 +1,7 @@
 package com.yourdomain.webviewapp;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,16 +20,28 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG        = "MainActivity";
+    private static final int    RC_SIGN_IN = 9001;
 
-    private WebView webView;
-    private ProgressBar progressBar;
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private SharedPreferences fcmPrefs;
+    // ✅ Replace with your Web Client ID from Google Cloud Console
+    // (Not the Android client ID — the WEB one, found under OAuth 2.0 credentials)
+    private static final String WEB_CLIENT_ID = "539210452254-hvsllodfkpqe4lmphv73948uq37rnhar.apps.googleusercontent.com";
+
+    private WebView             webView;
+    private ProgressBar         progressBar;
+    private SwipeRefreshLayout  swipeRefreshLayout;
+    private SharedPreferences   fcmPrefs;
+    private GoogleSignInClient  mGoogleSignInClient;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -46,7 +59,15 @@ public class MainActivity extends AppCompatActivity {
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
 
-        // ✅ Fetch and store FCM token in SharedPreferences
+        // ✅ Set up Google Sign-In SDK
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile()
+                .requestIdToken(WEB_CLIENT_ID)
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        // ✅ Fetch and store FCM token
         FirebaseMessaging.getInstance().getToken()
             .addOnCompleteListener(task -> {
                 if (!task.isSuccessful()) {
@@ -55,17 +76,18 @@ public class MainActivity extends AppCompatActivity {
                 }
                 String newToken   = task.getResult();
                 String savedToken = fcmPrefs.getString("fcm_token", "");
-
                 if (!newToken.equals(savedToken)) {
-                    fcmPrefs.edit()
-                        .putString("fcm_token", newToken)
-                        .apply();
+                    fcmPrefs.edit().putString("fcm_token", newToken).apply();
                     Log.d(TAG, "FCM token stored in SharedPreferences");
                 }
             });
 
-        // ✅ Inject Android JS interface so the login page can read the FCM token
+        // ✅ Attach the JS bridge (AndroidBridge) — now includes Google Sign-In trigger
         webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+
+        // ✅ Tag the user agent so the login page can detect WebView reliably
+        String currentUA = webView.getSettings().getUserAgentString();
+        webView.getSettings().setUserAgentString(currentUA + " ThemchatWebView");
 
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
 
@@ -95,12 +117,10 @@ public class MainActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(false);
 
-                // ✅ If this is the login page, inject FCM token into the form
-                // so it gets submitted together with email + password
+                // ✅ Inject FCM token into login form hidden field
                 if (url.contains("login")) {
                     String fcmToken = fcmPrefs.getString("fcm_token", "");
                     if (!fcmToken.isEmpty()) {
-                        // Inject a hidden input field into the login form
                         String js = "javascript:(function() {" +
                             "var forms = document.getElementsByTagName('form');" +
                             "if (forms.length > 0) {" +
@@ -109,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
                             "  input.name  = 'fcm_token';" +
                             "  input.value = '" + fcmToken.replace("'", "\\'") + "';" +
                             "  forms[0].appendChild(input);" +
-                            "  console.log('FCM token injected into login form');" +
                             "}" +
                             "})()";
                         view.loadUrl(js);
@@ -146,14 +165,69 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl(siteUrl);
     }
 
-    /**
-     * ✅ JS Bridge — lets the login page JS read the FCM token from Android
-     * Usage in JS: var token = AndroidBridge.getFcmToken();
-     */
+    // ─────────────────────────────────────────────────────────────
+    // ✅ Called from JS via AndroidBridge.startGoogleLogin()
+    // ─────────────────────────────────────────────────────────────
+    public void signInWithGoogle() {
+        // Sign out first so the account picker always shows
+        mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ✅ Handle Google Sign-In result, pass data back to WebView JS
+    // ─────────────────────────────────────────────────────────────
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+
+                String email   = account.getEmail()          != null ? account.getEmail()          : "";
+                String name    = account.getDisplayName()    != null ? account.getDisplayName()    : "";
+                String idToken = account.getIdToken()        != null ? account.getIdToken()        : "";
+                String photoUrl = account.getPhotoUrl()      != null ? account.getPhotoUrl().toString() : "";
+
+                // Escape single quotes to avoid breaking the JS string
+                String safeEmail   = email.replace("'", "\\'");
+                String safeName    = name.replace("'", "\\'");
+                String safeToken   = idToken.replace("'", "\\'");
+                String safePhoto   = photoUrl.replace("'", "\\'");
+
+                // ✅ Call the JS function defined in your login page
+                String js = "javascript:receiveGoogleUser('" + safeEmail + "','" + safeName + "','" + safeToken + "','" + safePhoto + "')";
+                webView.post(() -> webView.loadUrl(js));
+
+                Log.d(TAG, "Google Sign-In success: " + email);
+
+            } catch (ApiException e) {
+                Log.e(TAG, "Google Sign-In failed, code: " + e.getStatusCode());
+                // ✅ Notify the page that login failed
+                webView.post(() -> webView.loadUrl("javascript:googleLoginFailed(" + e.getStatusCode() + ")"));
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ✅ JS Bridge — exposes methods to your HTML/JS login page
+    // ─────────────────────────────────────────────────────────────
     public class AndroidBridge {
+
+        /** Returns the FCM push token to inject into the login form */
         @JavascriptInterface
         public String getFcmToken() {
             return fcmPrefs.getString("fcm_token", "");
+        }
+
+        /** Triggered by the Google button in WebView — launches native Google Sign-In */
+        @JavascriptInterface
+        public void startGoogleLogin() {
+            runOnUiThread(() -> signInWithGoogle());
         }
     }
 
