@@ -35,15 +35,18 @@ jobs:
         with:
           gradle-version: 7.6
 
-      - name: Decode keystore file from secret
+      - name: Generate Keystore
         run: |
           mkdir -p webview-app/app/keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d ' \n\r' | base64 -d > webview-app/app/keystore/release-key.jks
-
-      - name: Verify keystore decoded correctly
-        run: |
-          ls -lh webview-app/app/keystore/release-key.jks
-          file webview-app/app/keystore/release-key.jks
+          keytool -genkey -v \
+            -keystore webview-app/app/keystore/release-key.jks \
+            -alias ${{ secrets.KEY_ALIAS }} \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 20000 \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            -dname "CN=Albert Nfor, OU=themchat, O=themchat, L=Buea, ST=West, C=CM"
 
       - name: Print SHA1 from keystore
         run: |
@@ -51,7 +54,7 @@ jobs:
             -keystore webview-app/app/keystore/release-key.jks \
             -alias ${{ secrets.KEY_ALIAS }} \
             -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-            -keypass ${{ secrets.KEY_PASSWORD }} | grep SHA1
+            -keypass ${{ secrets.KEY_PASSWORD }} | grep -E "SHA1|SHA256"
 
       - name: Write gradle.properties with keystore info
         run: |
