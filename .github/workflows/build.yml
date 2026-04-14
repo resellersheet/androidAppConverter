@@ -38,7 +38,7 @@ jobs:
       - name: Decode keystore file from secret
         run: |
           mkdir -p webview-app/app/keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > webview-app/app/keystore/release-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 -d > webview-app/app/keystore/release-key.jks
 
       # ✅ NEW STEP: PRINT SHA1
       - name: Print SHA1 from keystore
