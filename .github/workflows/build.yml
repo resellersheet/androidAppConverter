@@ -22,60 +22,46 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4   # Updated to v4
+        uses: actions/checkout@v3
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          java-version: 17          # Better to use 17 for newer Gradle
+          java-version: 11
           distribution: temurin
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 8.5       # Updated (7.6 is old)
+          gradle-version: 7.6
 
-      # ─────────────────────────────────────────────────────────────
-      # FIXED: Generate Keystore Step
-      # ─────────────────────────────────────────────────────────────
       - name: Generate Keystore
         run: |
           mkdir -p webview-app/app/keystore
-
-          # Delete any existing keystore to prevent "alias already exists"
-          rm -f webview-app/app/keystore/release-key.jks
-
-          keytool -genkeypair -v \
+          keytool -genkey -v \
             -keystore webview-app/app/keystore/release-key.jks \
             -alias ${{ secrets.KEY_ALIAS }} \
             -keyalg RSA \
             -keysize 2048 \
             -validity 20000 \
             -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-            -keypass ${{ secrets.KEYSTORE_PASSWORD }} \     # ← Same password (removes warning)
-            -dname "CN=Albert Nfor, OU=themchat, O=themchat, L=Buea, ST=West, C=CM" \
-            -noprompt   # Makes it non-interactive
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            -dname "CN=Albert Nfor, OU=themchat, O=themchat, L=Buea, ST=West, C=CM"
 
-      - name: Print SHA1 & SHA256 (for verification)
+      - name: Print SHA1 from keystore
         run: |
           keytool -list -v \
             -keystore webview-app/app/keystore/release-key.jks \
             -alias ${{ secrets.KEY_ALIAS }} \
-            -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep -E "SHA1|SHA256"
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} | grep -E "SHA1|SHA256"
 
-      # Write signing config to gradle.properties
       - name: Write gradle.properties with keystore info
         run: |
-          cat << EOF > webview-app/app/gradle.properties
-          KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-          KEYSTORE_PATH=keystore/release-key.jks
-          EOF
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> webview-app/app/gradle.properties
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
 
-      # Rest of your steps (slightly improved)
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
@@ -90,27 +76,26 @@ jobs:
       - name: Prepare splash logo
         run: |
           mkdir -p webview-app/app/src/main/res/drawable
-          convert logo.png -resize 300x300 webview-app/app/src/main/res/drawable/your_logo.png
+          convert logo.png -resize 300x300 your_logo.png
+          cp your_logo.png webview-app/app/src/main/res/drawable/your_logo.png
 
       - name: Set app name in strings.xml
         run: |
-          sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" \
-            webview-app/app/src/main/res/values/strings.xml
+          sed -i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">${{ inputs.app_name }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Replace site URL in strings.xml
         run: |
-          sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" \
-            webview-app/app/src/main/res/values/strings.xml
+          sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
 
       - name: Build Release APK
         working-directory: webview-app
-        run: ./gradlew assembleRelease
+        run: gradle assembleRelease
 
       - name: Build Release AAB
         working-directory: webview-app
-        run: ./gradlew bundleRelease
+        run: gradle bundleRelease
 
-      - name: Upload APK & AAB as Artifacts
+      - name: Upload APK & AAB as GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.app_name }}-build
