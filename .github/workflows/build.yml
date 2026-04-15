@@ -20,11 +20,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      # ✅ Java 17 required for sdkmanager and Android SDK 35
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          java-version: 11
+          java-version: 17
           distribution: temurin
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
