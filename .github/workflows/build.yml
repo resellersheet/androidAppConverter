@@ -68,6 +68,16 @@ jobs:
       - name: Replace site URL in strings.xml
         run: |
           sed -i "s|<string name=\"site_url\">.*</string>|<string name=\"site_url\">${{ inputs.site_url }}</string>|" webview-app/app/src/main/res/values/strings.xml
+
+      # ✅ Fix package structure before build
+      - name: Fix package structure
+        run: |
+          mkdir -p webview-app/app/src/main/java/com/themchat/app
+          cp webview-app/app/src/main/java/com/yourdomain/webviewapp/*.java \
+             webview-app/app/src/main/java/com/themchat/app/
+          sed -i 's/package com.yourdomain.webviewapp/package com.themchat.app/g' \
+             webview-app/app/src/main/java/com/themchat/app/*.java
+
       - name: Build Release APK
         working-directory: webview-app
         run: gradle assembleRelease
