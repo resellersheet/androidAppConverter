@@ -3,7 +3,7 @@ plugins {
     id 'com.google.gms.google-services' // ✅ Step 2: Google Services plugin
 }
 android {
-    namespace "com.yourdomain.webviewapp"
+    namespace "com.themchat.app"
     compileSdkVersion 33
     defaultConfig {
         applicationId "com.themchat.app"
