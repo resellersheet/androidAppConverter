@@ -31,7 +31,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 7.6
+          gradle-version: 8.2
 
       # ✅ Install Android SDK Platform 35
       - name: Install Android SDK Platform 35
