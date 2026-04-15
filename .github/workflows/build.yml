@@ -77,6 +77,9 @@ jobs:
              webview-app/app/src/main/java/com/themchat/app/
           sed -i 's/package com.yourdomain.webviewapp/package com.themchat.app/g' \
              webview-app/app/src/main/java/com/themchat/app/*.java
+          sed -i 's/import com.yourdomain.webviewapp/import com.themchat.app/g' \
+             webview-app/app/src/main/java/com/themchat/app/*.java
+          rm -rf webview-app/app/src/main/java/com/yourdomain
 
       - name: Build Release APK
         working-directory: webview-app
