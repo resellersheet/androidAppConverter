@@ -6,7 +6,7 @@ android {
     namespace "com.yourdomain.webviewapp"
     compileSdkVersion 33
     defaultConfig {
-        applicationId "com.yourdomain.webviewapp"
+        applicationId "com.themchat.app"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
