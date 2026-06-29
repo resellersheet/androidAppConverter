@@ -67,22 +67,56 @@ jobs:
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> webview-app/app/gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> webview-app/app/gradle.properties
 
-      - name: Install ImageMagick
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - name: Install ImageMagick and curl
+        run: sudo apt-get update && sudo apt-get install -y imagemagick curl
 
       - name: Download user logo
-        run: curl -L "${{ inputs.logo_url }}" -o logo.png
+        run: |
+          # Download with proper headers to avoid getting an HTML error page
+          curl -L \
+            -A "Mozilla/5.0" \
+            --max-time 30 \
+            --retry 3 \
+            "${{ inputs.logo_url }}" \
+            -o logo_raw
 
-      - name: Resize and replace launcher icon
+          # Check what file type was actually downloaded
+          echo "Downloaded file type:"
+          file logo_raw
+
+          # Force convert to a clean valid PNG regardless of input format
+          # This handles PNG, JPG, WebP, GIF — whatever was downloaded
+          convert logo_raw /tmp/logo_clean.png
+
+          # Verify the clean PNG is valid
+          echo "Clean PNG info:"
+          identify /tmp/logo_clean.png
+
+      - name: Resize and replace launcher icons
         run: |
           mkdir -p webview-app/app/src/main/res/mipmap-xxxhdpi
-          convert logo.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          mkdir -p webview-app/app/src/main/res/mipmap-xxhdpi
+          mkdir -p webview-app/app/src/main/res/mipmap-xhdpi
+          mkdir -p webview-app/app/src/main/res/mipmap-hdpi
+          mkdir -p webview-app/app/src/main/res/mipmap-mdpi
+
+          convert /tmp/logo_clean.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          convert /tmp/logo_clean.png -resize 144x144 webview-app/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert /tmp/logo_clean.png -resize 96x96   webview-app/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert /tmp/logo_clean.png -resize 72x72   webview-app/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert /tmp/logo_clean.png -resize 48x48   webview-app/app/src/main/res/mipmap-mdpi/ic_launcher.png
+
+          # Also generate round icons (required for Android 8+)
+          convert /tmp/logo_clean.png -resize 192x192 webview-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          convert /tmp/logo_clean.png -resize 144x144 webview-app/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          convert /tmp/logo_clean.png -resize 96x96   webview-app/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          convert /tmp/logo_clean.png -resize 72x72   webview-app/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          convert /tmp/logo_clean.png -resize 48x48   webview-app/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
 
       - name: Prepare splash logo
         run: |
           mkdir -p webview-app/app/src/main/res/drawable
-          convert logo.png -resize 300x300 your_logo.png
-          cp your_logo.png webview-app/app/src/main/res/drawable/your_logo.png
+          convert /tmp/logo_clean.png -resize 300x300 webview-app/app/src/main/res/drawable/your_logo.png
 
       - name: Set app name in strings.xml
         run: |
