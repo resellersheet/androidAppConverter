@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     // ✅ Replace with your Web Client ID from Google Cloud Console
     // (Not the Android client ID — the WEB one, found under OAuth 2.0 credentials)
-    private static final String WEB_CLIENT_ID = "539210452254-2a29k7o3u675laqimqij032d6ln8vqq0.apps.googleusercontent.com";
+    private static final String WEB_CLIENT_ID = "539210452254-gvtqu3lg3u4rmp2bg31hl2pgltl76ktv.apps.googleusercontent.com";
 
     private WebView             webView;
     private ProgressBar         progressBar;
